@@ -1,12 +1,13 @@
 model User {
-  id         Int      @id @default(autoincrement())
+  id         String   @id
   telegramId BigInt   @unique @map("telegram_id")
   username   String?
-  firstName  String @map("first_name")
+  firstName  String   @map("first_name")
+  role       Role     @default(BOMZH)
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   bankAccount BankAccount?
 
-	@@map("users")
+  @@map("users")
 }
