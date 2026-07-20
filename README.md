@@ -29,6 +29,7 @@ prisma/
 src/
 ├── generated/       # Strictly typed Prisma client
 ├── lib/             # Infrastructure clients (Prisma client & PG Pool initialization)
+├── repositories/    # Data access layer (Pure CRUD queries)
 └── utils/           # Shared helpers (ID generator, etc.)
 ```
 
