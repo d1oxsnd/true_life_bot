@@ -32,7 +32,8 @@ src/
 ├── lib/             # Infrastructure clients (Prisma client & PG Pool initialization)
 ├── repositories/    # Data access layer (Pure CRUD queries)
 ├── services/        # Domain core (Game rules & business logic)
-└── utils/           # Shared helpers (ID generator, etc.)
+├──utils/           # Shared helpers (ID generator, etc.)
+└── index.ts         # Central application entrypoint (Dependency Injection wire-up)
 ```
 
 ## 🛠️ Quick Start
