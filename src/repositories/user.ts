@@ -7,7 +7,6 @@ export type UserWithBankAccount = User & { bankAccount: BankAccount | null }
 export class UserRepository {
 	async createUser(data: {
 		telegramId: bigint
-		username: string | null
 	}): Promise<UserWithBankAccount> {
 		const id = generateId()
 
@@ -15,7 +14,6 @@ export class UserRepository {
 			data: {
 				id,
 				telegramId: data.telegramId,
-				username: data.username,
 				bankAccount: {
 					create: {},
 				},
@@ -39,7 +37,7 @@ export class UserRepository {
 
 	async updateUser(
 		telegramId: bigint,
-		data: { username?: string | null; role?: Role },
+		data: { username?: string; role?: Role },
 	): Promise<UserWithBankAccount> {
 		return await prisma.user.update({
 			where: {
