@@ -51,7 +51,7 @@ Create a .env file in the root directory and fill it with your credentials:
 DATABASE_URL="postgresql://postgres_user:postgres_password@localhost:6000/postgres_db?schema=public"
 
 # Your Telegram Bot Token obtained from @BotFather
-TELEGRAM_BOT_TOKEN="your_bot_token_here"
+BOT_TOKEN="your_bot_token_here"
 ```
 ### 3. Start PostgreSQL via Docker
 Spin up the database container in detached mode:
