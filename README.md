@@ -1,14 +1,14 @@
 # True Life Bot
 
-A Telegram RPG game bot powered by rich text and inline menus powered by **Grammy**, **Prisma (PostgreSQL)**, and **Docker**.
+A Telegram Game bot powered by rich text and inline menus powered by **Grammy**, **Prisma (PostgreSQL)**, and **Docker**.
 
-## 🚀 Tech Stack
+## Tech Stack
 - **Backend:** Node.js (TypeScript)
 - **Framework:** [Grammy](https://grammy.dev/)
 - **ORM:** [Prisma](https://www.prisma.io/)
 - **Database:** PostgreSQL (Docker container)
 
-## 🛠️ Quick Start
+## Quick Start
 
 ### 1. Clone the Repository & Install Dependencies
 ```bash
