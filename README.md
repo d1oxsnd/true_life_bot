@@ -28,6 +28,7 @@ prisma/
 └── schemas/         # Modular Prisma schemas (user, bank, role)
 src/
 ├── generated/       # Strictly typed Prisma client
+├── handlers/        # Interface layer (Grammy command routers)
 ├── lib/             # Infrastructure clients (Prisma client & PG Pool initialization)
 ├── repositories/    # Data access layer (Pure CRUD queries)
 ├── services/        # Domain core (Game rules & business logic)
