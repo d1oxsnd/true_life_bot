@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-export function generateGameId(): string {
+export function generateId(): string {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
   let id = '';
   const bytes = crypto.randomBytes(6);
