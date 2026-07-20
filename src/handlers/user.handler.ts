@@ -1,6 +1,7 @@
 import type { CommandContext, Context } from 'grammy'
 import type { GameService } from '../services/game.service.js'
 import { RoleLabels } from '../utils/roles.js'
+import { formatMoney } from '../utils/formatter.js'
 
 export class UserHandler {
 	constructor(private gameService: GameService) {}
@@ -42,14 +43,12 @@ export class UserHandler {
 
 			await ctx.reply(
 				`${userMention}, игровой профиль: \n` +
-					`🆔 Игровой ID:\n` +
+					`🆔 ID:\n` +
 					`       \`${player.id}\`\n` +
-					`🪪 Никнейм:\n` +
-					`       ${userMention}\n` +
 					`🎭 Статус:\n` +
 					`       ${russianRole}\n` +
-					`💰 Баланс в банке:\n` +
-					`       \`$${player.bankAccount?.balance}\``,
+					`💰 Баланс:\n` +
+					`       \`${formatMoney(player.bankAccount?.balance || 0)}\``,
 				{ parse_mode: 'Markdown' },
 			)
 		} catch (error) {
