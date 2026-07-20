@@ -1,0 +1,7 @@
+enum Role {
+  BOMZH
+  PLANKTON
+  BUSINESS_PLUS
+  MODERATOR
+  ADMIN
+}

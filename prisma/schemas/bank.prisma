@@ -1,9 +1,11 @@
 model BankAccount {
-  id        Int      @id @default(autoincrement())
+
+
+  userId    String   @id @map("user_id") 
   balance   BigInt   @default(1000)
-  userId    Int      @unique @map("user_id")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   updatedAt DateTime @updatedAt @map("updated_at")
 
-	@@map("bank_accounts")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("bank_accounts")
 }
