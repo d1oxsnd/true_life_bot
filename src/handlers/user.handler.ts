@@ -13,24 +13,48 @@ export class UserHandler {
 
 		try {
 			const telegramId = BigInt(ctx.from.id)
-			const player = await this.gameService.handlePlayerLogin(telegramId)
-
-			const russianRole = RoleLabels[player.role]
+			await this.gameService.handlePlayerLogin(telegramId)
 
 			await ctx.reply(
-				`*Добро пожаловать в True Life, ${player.username}!*\n` +
-					`🆔 Твой игровой ID:\n` +
-					`\`${player.id}\`\n` +
-					`🎭 Твой статус:\n` +
-					`*${russianRole}*\n` +
-					`💰 Баланс в банке:\n` +
-					`\`$${player.bankAccount?.balance ?? 0}\`\n\n` +
-					`Напиши \`помощь\` для просмотра всех команд`,
+				`🌆 *Добро пожаловать в True Life!* \n\n` +
+					`Это симулятор виртуальной жизни в твоем Telegram. Развивай персонажа, зарабатывай деньги, покупай бизнесы и поднимай свой статус от Бомжа до Бизнесмена! 🚀\n\n` +
+					`Напиши \`помощь\` для просмотра всех доступных команд.`,
 				{ parse_mode: 'Markdown' },
 			)
 		} catch (error) {
 			console.error('Ошибка в onStart хендлере:', error)
-			await ctx.reply('⚠️ Произошла ошибка при инициализации персонажа. Попробуйте позже.')
+			await ctx.reply('⚠️ Произошла ошибка при запуске бота. Попробуйте позже.')
+		}
+	}
+
+	/**
+	 * Обработчик текстовой команды "профиль"
+	 */
+	async onProfile(ctx: Context): Promise<void> {
+		if (!ctx.from) return
+
+		try {
+			const telegramId = BigInt(ctx.from.id)
+			const player = await this.gameService.handlePlayerLogin(telegramId)
+			const russianRole = RoleLabels[player.role]
+
+			const userMention = `[${player.username}](tg://user?id=${ctx.from.id})`
+
+			await ctx.reply(
+				`${userMention}, игровой профиль: \n` +
+					`🆔 Игровой ID:\n` +
+					`       \`${player.id}\`\n` +
+					`🪪 Никнейм:\n` +
+					`       ${userMention}\n` +
+					`🎭 Статус:\n` +
+					`       ${russianRole}\n` +
+					`💰 Баланс в банке:\n` +
+					`       \`$${player.bankAccount?.balance}\``,
+				{ parse_mode: 'Markdown' },
+			)
+		} catch (error) {
+			console.error('Ошибка в onProfile хендлере:', error)
+			await ctx.reply('⚠️ Не удалось загрузить профиль. Попробуйте позже.')
 		}
 	}
 }

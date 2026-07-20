@@ -17,7 +17,9 @@ const userHandler = new UserHandler(gameService)
 
 const bot = new Bot(token)
 
-bot.command('start', ctx => userHandler.onStart(ctx))
+bot.command('start', (ctx) => userHandler.onStart(ctx))
+
+bot.hears(/^профиль$/i, (ctx) => userHandler.onProfile(ctx))
 
 console.log('Бот True Life успешно запущен в режиме Long Polling...')
 bot.start()
