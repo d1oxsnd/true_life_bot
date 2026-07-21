@@ -35,6 +35,12 @@ export class UserRepository {
 		})
 	}
 
+	async findUserByUsername(username: string): Promise<User | null> {
+    return await prisma.user.findUnique({
+      where: { username },
+    })
+  }
+
 	async updateUser(
 		telegramId: bigint,
 		data: { username?: string; role?: Role },
@@ -62,4 +68,24 @@ export class UserRepository {
 			},
 		})
 	}
+
+	async updateUsernameWithDeduction(
+    userId: string,
+    telegramId: bigint,
+    newUsername: string,
+    newBalance: bigint
+  ): Promise<UserWithBankAccount> {
+    return await prisma.$transaction(async (tx) => {
+      await tx.bankAccount.update({
+        where: { userId },
+        data: { balance: newBalance },
+      })
+
+      return await tx.user.update({
+        where: { telegramId },
+        data: { username: newUsername },
+        include: { bankAccount: true },
+      })
+    })
+  }
 }

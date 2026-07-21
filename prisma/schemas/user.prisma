@@ -1,7 +1,7 @@
 model User {
   id         String   @id
   telegramId BigInt   @unique @map("telegram_id")
-  username   String   @default("Бычок")
+  username   String   @unique @default("Бычок")
   role       Role     @default(BOMZH)
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
