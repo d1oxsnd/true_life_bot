@@ -1,27 +1,49 @@
 import { Bot } from 'grammy'
 import { UserRepository } from './repositories/user.js'
-import { GameService } from './services/game.service.js'
+import { UserService } from './services/user.service.js'
+import { AdminService } from './services/admin.service.js'
+import { PermissionService } from './services/permission.service.js'
+
 import { GuardMiddleware } from './handlers/guards.js'
 import { UserHandler } from './handlers/user.handler.js'
+import { ProfileHandler } from './handlers/profile.handler.js'
+import { AdminHandler } from './handlers/admin.handler.js'
+import { Role } from './generated/prisma/client.js'
 
 const token = process.env.BOT_TOKEN
-if (!token) {
-	throw new Error('Ошибка: В .env не задан BOT_TOKEN!')
-}
+if (!token) throw new Error('Ошибочка: В .env не задан BOT_TOKEN!')
 
-const userRepository = new UserRepository()
-const gameService = new GameService(userRepository)
+// 1. Инициализация слоя доступа к данным
+const userRepo = new UserRepository()
 
-const guard = new GuardMiddleware(gameService)
-const userHandler = new UserHandler(gameService)
+// 2. Инициализация слоя сервисов
+const userService = new UserService(userRepo)
+const adminService = new AdminService(userRepo)
+const permissionService = new PermissionService(userRepo)
+
+// 3. Инициализация слоя UI/Хендлеров
+const guard = new GuardMiddleware(permissionService)
+const userHandler = new UserHandler(userService)
+const profileHandler = new ProfileHandler(userService)
+const adminHandler = new AdminHandler(adminService)
 
 const bot = new Bot(token)
 
+// ==========================================
+// РЕГИСТРАЦИЯ КОМАНД
+// ==========================================
+
+// Пользовательские команды
 bot.command('start', (ctx) => userHandler.onStart(ctx))
-
 bot.hears(/^профиль$/i, (ctx) => userHandler.onProfile(ctx))
+bot.hears(/^никнейм(\s+.*)?$/i, (ctx) => profileHandler.onChangeNickname(ctx))
 
-bot.hears(/^никнейм(\s+.*)?$/i, (ctx) => userHandler.onChangeNickname(ctx))
+// Админские команды
+bot.command(
+  'changeid',
+  guard.requireRole(Role.ADMIN),
+  (ctx) => adminHandler.onChangeId(ctx)
+)
 
-console.log('Бот True Life успешно запущен в режиме Long Polling...')
+console.log('🚀 Бот True Life успешно запущен!')
 bot.start()
