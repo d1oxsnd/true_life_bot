@@ -21,5 +21,7 @@ bot.command('start', (ctx) => userHandler.onStart(ctx))
 
 bot.hears(/^профиль$/i, (ctx) => userHandler.onProfile(ctx))
 
+bot.hears(/^никнейм(\s+.*)?$/i, (ctx) => userHandler.onChangeNickname(ctx))
+
 console.log('Бот True Life успешно запущен в режиме Long Polling...')
 bot.start()
