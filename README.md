@@ -27,13 +27,21 @@ prisma/
 ├── migrations/      # Database migration history
 └── schemas/         # Modular Prisma schemas (user, bank, role)
 src/
+├── config/          # Global game balance & validation constants
 ├── generated/       # Strictly typed Prisma client
-├── handlers/        # Interface layer (Grammy command routers)
-├── lib/             # Infrastructure clients (Prisma client & PG Pool initialization)
-├── repositories/    # Data access layer (Pure CRUD queries)
-├── services/        # Domain core (Game rules & business logic)
-├──utils/           # Shared helpers (ID generator, etc.)
-└── index.ts         # Central application entrypoint (Dependency Injection wire-up)
+├── handlers/        # Interface layer (GrammY routers & commands)
+│   ├── admin.handler.ts    # Admin management (/changeid)
+│   ├── profile.handler.ts  # Profile customization (никнейм)
+│   ├── user.handler.ts     # Core player actions (/start, профиль)
+│   └── guards.ts           # Middleware role/permission guards
+├── lib/             # Infrastructure clients (Prisma Client instance)
+├── repositories/    # Data access layer (Pure CRUD queries & transactions)
+├── services/        # Domain core (Pure business logic)
+│   ├── admin.service.ts      # Admin operations & ID change logic
+│   ├── permission.service.ts # Role weight calculation & RBAC
+│   └── user.service.ts       # Profile, login & username operations
+├── utils/           # Shared helpers (Formatter, ID generator, roles)
+└── index.ts         # Central entrypoint & Manual Dependency Injection
 ```
 
 ## 🛠️ Quick Start
@@ -52,6 +60,9 @@ DATABASE_URL="postgresql://postgres_user:postgres_password@localhost:6000/postgr
 
 # Your Telegram Bot Token obtained from @BotFather
 BOT_TOKEN="your_bot_token_here"
+
+# Super Admin Telegram ID (automatically gets ADMIN role upon first login)
+ADMIN_TELEGRAM_ID="123456789"
 ```
 ### 3. Start PostgreSQL via Docker
 Spin up the database container in detached mode:
