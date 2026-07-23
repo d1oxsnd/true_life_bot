@@ -1,84 +1,43 @@
-import type { UserRepository, UserWithBankAccount } from '../repositories/user.js'
-import { GAME_CONFIG } from '../configs/constants.js'
-import { Role } from '../generated/prisma/client.js'
-
-export type ChangeUsernameResult =
-  | { success: true; newUsername: string; cost: number }
-  | {
-      success: false
-      reason:
-        | 'ACCOUNT_NOT_FOUND'
-        | 'INVALID_LENGTH'
-        | 'NICKNAME_TAKEN'
-        | 'INSUFFICIENT_FUNDS'
-    }
+import type { Role } from '../generated/prisma/enums.js'
+import type { UserRepository } from '../repositories/user.repository.js'
+import type { UserWithBank } from '../repositories/user.repository.js'
 
 export class UserService {
   constructor(private userRepo: UserRepository) {}
 
-  /**
-   * Логин пользователя + автоматическое назначение главного админа из ENV
-   */
-  async handlePlayerLogin(telegramId: bigint): Promise<UserWithBankAccount> {
-    let player = await this.userRepo.findUserByTelegramId(telegramId)
-
-    if (!player) {
-      player = await this.userRepo.createUser({ telegramId })
-    }
-
-    // Проверка на Супер-Админа из .env
-    const envAdminId = process.env.ADMIN_TELEGRAM_ID
-    if (envAdminId && telegramId === BigInt(envAdminId) && player.role !== Role.ADMIN) {
-      player = await this.userRepo.updateUser(telegramId, { role: Role.ADMIN })
-    }
-
-    return player
+  async getOrCreateUser(telegramId: bigint): Promise<UserWithBank> {
+    return this.userRepo.getOrCreate(telegramId)
   }
 
-  /**
-   * Смена игрового ника
-   */
-  async changeUsername(
+  async getUserByTelegramId(telegramId: bigint): Promise<UserWithBank | null> {
+    return this.userRepo.findByTelegramId(telegramId)
+  }
+
+  async getUserById(id: string): Promise<UserWithBank | null> {
+    return this.userRepo.findById(id)
+  }
+
+  async findByUsername(username: string) {
+    return this.userRepo.findByUsername(username)
+  }
+
+  async updateUser(
     telegramId: bigint,
-    newUsername: string,
-  ): Promise<ChangeUsernameResult> {
-    const player = await this.userRepo.findUserByTelegramId(telegramId)
-    if (!player || !player.bankAccount) {
-      return { success: false, reason: 'ACCOUNT_NOT_FOUND' }
-    }
+    data: { username?: string; role?: Role }
+  ): Promise<UserWithBank> {
+    return this.userRepo.update(telegramId, data)
+  }
 
-    const trimmedNick = newUsername.trim()
+  async banUser(telegramId: bigint): Promise<UserWithBank> {
+  return this.userRepo.update(telegramId, { isBanned: true })
+}
 
-    if (
-      trimmedNick.length < GAME_CONFIG.NICKNAME.MIN_LENGTH ||
-      trimmedNick.length > GAME_CONFIG.NICKNAME.MAX_LENGTH
-    ) {
-      return { success: false, reason: 'INVALID_LENGTH' }
-    }
+// 💡 Разбанить пользователя
+async unbanUser(telegramId: bigint): Promise<UserWithBank> {
+  return this.userRepo.update(telegramId, { isBanned: false })
+}
 
-    const existingUser = await this.userRepo.findUserByUsername(trimmedNick)
-    if (existingUser) {
-      return { success: false, reason: 'NICKNAME_TAKEN' }
-    }
-
-    const cost = GAME_CONFIG.NICKNAME.COST
-    if (player.bankAccount.balance < BigInt(cost)) {
-      return { success: false, reason: 'INSUFFICIENT_FUNDS' }
-    }
-
-    const newBalance = player.bankAccount.balance - BigInt(cost)
-
-    await this.userRepo.updateUsernameWithDeduction(
-      player.id,
-      telegramId,
-      trimmedNick,
-      newBalance,
-    )
-
-    return {
-      success: true,
-      newUsername: trimmedNick,
-      cost,
-    }
+  async deleteUser(telegramId: bigint): Promise<UserWithBank> {
+    return this.userRepo.delete(telegramId)
   }
 }
