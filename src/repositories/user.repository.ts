@@ -15,6 +15,7 @@ export class UserRepository {
         telegramId,
         username: `Юзер-${randomSuffix}`,
         bankAccount: { create: {} },
+        robberyStats: {create: {}}
       },
       include: { bankAccount: true },
     })

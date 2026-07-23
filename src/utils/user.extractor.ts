@@ -1,8 +1,8 @@
-import type { UserWithBankAccount } from '../repositories/user.repository.js'
+import type { UserWithBank } from '../repositories/user.repository.js'
 import type { MyContext } from '../types/context.js'
 
 export type TargetPlayerResult = {
-  player: UserWithBankAccount
+  player: UserWithBank
   targetTgUser: NonNullable<MyContext['from']>
   isSelf: boolean
 }
