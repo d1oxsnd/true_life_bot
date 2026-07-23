@@ -1,4 +1,3 @@
-// src/middlewares/auth.middleware.ts
 import type { Middleware } from 'grammy'
 import type { MyContext } from '../types/context.js'
 import { Role } from '../generated/prisma/client.js'

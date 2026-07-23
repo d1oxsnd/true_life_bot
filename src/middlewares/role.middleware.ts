@@ -20,7 +20,7 @@ export function requireRole(minRole: Role, commandName: string): Middleware<MyCo
       const requiredRoleLabel = RoleLabels[minRole] ?? minRole
 
       return await ctx.smartReply(
-        `🔒 Команда \`${commandName}\` доступна только\n` +
+        `🔒 Команда \`${commandName}\` доступна\n` +
           `       статусу _${requiredRoleLabel}_ и выше`,
         { parse_mode: 'Markdown' },
       )
