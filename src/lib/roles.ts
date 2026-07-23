@@ -24,30 +24,34 @@ export interface RoleInfo {
   role: Role
   label: string
   price: bigint
-  nextRole: Role | null
   description: string
 }
 
-export const GAME_ROLES_CONFIG: Record<string, RoleInfo> = {
-  [Role.BOMZH]: {
-    role: Role.BOMZH,
-    label: RoleLabels[Role.BOMZH],
-    price: 0n,
-    nextRole: Role.PLANKTON,
-    description: 'бизнесы, ипотека',
-  },
+export const GAME_ROLES_CONFIG: Partial<Record<Role, RoleInfo>> = {
   [Role.PLANKTON]: {
     role: Role.PLANKTON,
     label: RoleLabels[Role.PLANKTON],
-    price: 100_000n,
-    nextRole: Role.BUSINESS_PLUS,
+    price: 100000n,
     description: 'бизнесы, ипотека',
   },
   [Role.BUSINESS_PLUS]: {
     role: Role.BUSINESS_PLUS,
     label: RoleLabels[Role.BUSINESS_PLUS],
-    price: 500_000_000n,
-    nextRole: null,
+    price: 500000000n,
     description: 'бизнесы, ипотека',
   },
+}
+
+
+export const ROLE_UPGRADE_PATH: Partial<Record<Role, Role>> = {
+  [Role.BOMZH]: Role.PLANKTON,
+  [Role.PLANKTON]: Role.BUSINESS_PLUS,
+}
+
+export function getNextRole(currentRole: Role): Role | null {
+  return ROLE_UPGRADE_PATH[currentRole] ?? null
+}
+
+export function canUpgrade(currentRole: Role): boolean {
+  return getNextRole(currentRole) !== null
 }

@@ -1,3 +1,4 @@
+import type { Role } from '../generated/prisma/enums.js'
 import { BankRepository } from '../repositories/bank.repository.js'
 
 export class BankService {
@@ -28,4 +29,8 @@ export class BankService {
 		await this.bankRepo.incrementBalance(userId, amount)
 		return { success: true } as const
 	}
+
+async payForRoleUpgrade(userId: string, amount: bigint, newRole: Role) {
+  return await this.bankRepo.payForRoleUpgrade(userId, amount, newRole)
+}
 }
