@@ -3,6 +3,10 @@ import { RobberyRepository } from '../repositories/robbery.repository.js'
 export class RobberyService {
   constructor(private robberyRepo: RobberyRepository) {}
 
+	getStats(userId: string) {
+		return this.robberyRepo.getStats(userId)
+	}
+
   calculateSuccessChance(successCount: number): number {
     const baseChance = 10
     const bonusPerWin = 0.5
