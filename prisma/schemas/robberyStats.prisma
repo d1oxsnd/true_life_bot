@@ -1,0 +1,14 @@
+model RobberyStats {
+  userId String @id @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  successCount Int       @default(0) @map("success_count")
+  totalCount   Int       @default(0) @map("total_count")
+  lastRobbedAt DateTime? @map("last_robbed_at")
+  totalStolen  BigInt @default(0) @map("total_stolen")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("robbery_stats")
+}
