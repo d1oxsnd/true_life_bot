@@ -44,19 +44,19 @@ statusComposer.hears(/^статус$/i, authMiddleware, async ctx => {
     text += `      ⚙️ **Команды:** \n              ${formattedDescription}\n`
   })
 
-  text += `\n💡 Чтобы повысить статус\n` + `      \`💬 статус поднять\``
+  text += `\n💡 Чтобы повысить статус\n` + `      ⚙️ \`статус поднять\``
 
   await ctx.smartReply(text, { parse_mode: 'Markdown' })
 })
 
-statusComposer.hears(/^статус поднять$/i, authMiddleware, async ctx => {
+statusComposer.hears(/^статус\s+(поднять|повысить|ап|купить)$/i, authMiddleware, async ctx => {
   if (!ctx.user) return
 
   const currentRole = ctx.user.role as Role
 
   if (!canUpgrade(currentRole)) {
     await ctx.smartReply(
-      `✋ Максимальный игровой статус!\n` + 
+      `✋ Максимальный статус!\n` + 
       `      Ждите новые обновления :D`
     )
     return
