@@ -42,7 +42,7 @@ robberyComposer.hears(/^(ограбить|грабеж|спиздить)$/i, aut
 
 			return await ctx.smartReply(
 				`🥷🏻⏳ ${robberMention}, надо залечь на дно!\n` +
-					`Грабить можно через _${hours}ч. ${minutes}мин._`,
+					`       Грабить можно через _${hours}ч. ${minutes}мин._`,
 				{ parse_mode: 'Markdown' },
 			)
 		}
