@@ -1,49 +1,50 @@
+import 'dotenv/config'
 import { Bot } from 'grammy'
-import { UserRepository } from './repositories/user.js'
+
+import type { MyContext } from './types/context.js'
+import { UserRepository } from './repositories/user.repository.js'
+import { BankRepository } from './repositories/bank.repository.js'
 import { UserService } from './services/user.service.js'
-import { AdminService } from './services/admin.service.js'
-import { PermissionService } from './services/permission.service.js'
+import { BankService } from './services/bank.service.js'
+import { startComposer } from './commands/start/start.composer.js'
+import { profileComposer } from './commands/profile/profile.composer.js'
 
-import { GuardMiddleware } from './handlers/guards.js'
-import { UserHandler } from './handlers/user.handler.js'
-import { ProfileHandler } from './handlers/profile.handler.js'
-import { AdminHandler } from './handlers/admin.handler.js'
-import { Role } from './generated/prisma/client.js'
+const bot_token = process.env.BOT_TOKEN
+if (!bot_token) throw new Error('Ошибочка: В .env не задан BOT_TOKEN!')
 
-const token = process.env.BOT_TOKEN
-if (!token) throw new Error('Ошибочка: В .env не задан BOT_TOKEN!')
-
-// 1. Инициализация слоя доступа к данным
 const userRepo = new UserRepository()
+const bankRepo = new BankRepository()
 
-// 2. Инициализация слоя сервисов
+const bankService = new BankService(bankRepo)
 const userService = new UserService(userRepo)
-const adminService = new AdminService(userRepo)
-const permissionService = new PermissionService(userRepo)
 
-// 3. Инициализация слоя UI/Хендлеров
-const guard = new GuardMiddleware(permissionService)
-const userHandler = new UserHandler(userService)
-const profileHandler = new ProfileHandler(userService)
-const adminHandler = new AdminHandler(adminService)
+const services = {
+  user: userService,
+  bank: bankService,
+}
 
-const bot = new Bot(token)
 
-// ==========================================
-// РЕГИСТРАЦИЯ КОМАНД
-// ==========================================
+const bot = new Bot<MyContext>(bot_token)
 
-// Пользовательские команды
-bot.command('start', (ctx) => userHandler.onStart(ctx))
-bot.hears(/^профиль$/i, (ctx) => userHandler.onProfile(ctx))
-bot.hears(/^никнейм(\s+.*)?$/i, (ctx) => profileHandler.onChangeNickname(ctx))
+bot.use(async (ctx, next) => {
+  ctx.services = services
 
-// Админские команды
-bot.command(
-  'changeid',
-  guard.requireRole(Role.ADMIN),
-  (ctx) => adminHandler.onChangeId(ctx)
-)
+  ctx.smartReply = (text, other) => {
+    const messageId = ctx.message?.message_id
+    return ctx.reply(text, {
+      ...other,
+      ...(messageId ? { reply_parameters: { message_id: messageId } } : {}),
+    })
+  }
 
-console.log('🚀 Бот True Life успешно запущен!')
-bot.start()
+  await next()
+})
+
+bot.use(startComposer)
+bot.use(profileComposer)
+
+bot.start({
+  onStart: (botInfo) => {
+    console.log(`🚀 Бот @${botInfo.username} успешно запущен!`)
+  },
+})
