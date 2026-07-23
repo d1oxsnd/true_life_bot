@@ -24,14 +24,14 @@ profileComposer.hears(
 			const userMention = `[${displayName}](tg://user?id=${targetTgUser.id})`
 
 			await ctx.smartReply(
-				`${userMention}, игровой профиль: \n` +
-					`🆔 ID:\n` +
+				`${userMention},\n` +`игровой профиль\n` +
+					`🆔 ID\n` +
 					`       \`${player.id}\`\n` +
-					`🎭 Статус:\n` +
+					`🎭 Статус\n` +
 					`       _${russianRole}_\n` +
-					`💰 Баланс:\n` +
+					`💰 Баланс\n` +
 					`       _${formatMoney(player.bankAccount?.balance || 0n)}_\n` +
-					`📅 Дата рег:\n` +
+					`📅 Дата рег\n` +
 					`       _${player.createdAt.toLocaleDateString('ru-RU')}_\n`,
 				{ parse_mode: 'Markdown' },
 			)

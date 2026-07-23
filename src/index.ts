@@ -8,9 +8,10 @@ import { UserService } from './services/user.service.js'
 import { BankService } from './services/bank.service.js'
 import { startComposer } from './commands/start/start.composer.js'
 import { profileComposer } from './commands/profile/profile.composer.js'
+import { statusComposer } from './commands/status/status.composer.js'
 
-const bot_token = process.env.BOT_TOKEN
-if (!bot_token) throw new Error('Ошибочка: В .env не задан BOT_TOKEN!')
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
+if (!TELEGRAM_BOT_TOKEN) throw new Error('Ошибочка: В .env не задан TELEGRAM_BOT_TOKEN!')
 
 const userRepo = new UserRepository()
 const bankRepo = new BankRepository()
@@ -24,7 +25,7 @@ const services = {
 }
 
 
-const bot = new Bot<MyContext>(bot_token)
+const bot = new Bot<MyContext>(TELEGRAM_BOT_TOKEN)
 
 bot.use(async (ctx, next) => {
   ctx.services = services
@@ -42,6 +43,7 @@ bot.use(async (ctx, next) => {
 
 bot.use(startComposer)
 bot.use(profileComposer)
+bot.use(statusComposer)
 
 bot.start({
   onStart: (botInfo) => {
