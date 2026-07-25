@@ -13,7 +13,7 @@ robberyComposer.hears(/^(ограбить|грабеж|спиздить)$/i, aut
 
 	if (!replyMessage || !victimTgUser) {
 		return await ctx.smartReply(
-			`🏴‍☠️ Чтобы ограбить кого-то\n       ⚙️ \`ограбить\` в ответ на сообщение`,
+			`🏴‍☠️ Чтобы ограбить кого-то:\n       ⚙️ \`ограбить\` в ответ на сообщение`,
 			{ parse_mode: 'Markdown' },
 		)
 	}

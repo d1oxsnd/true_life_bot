@@ -12,6 +12,8 @@ import { statusComposer } from './commands/status/status.composer.js'
 import { RobberyRepository } from './repositories/robbery.repository.js'
 import { RobberyService } from './services/robbery.service.js'
 import { robberyComposer } from './commands/robbery/robbery.composer.js'
+import { SlotsService } from './commands/slots/slots.service.js'
+import { slotsComposer } from './commands/slots/slots.composer.js'
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 if (!TELEGRAM_BOT_TOKEN) throw new Error('Ошибочка: В .env не задан TELEGRAM_BOT_TOKEN!')
@@ -23,11 +25,13 @@ const robberyRepo = new RobberyRepository()
 const bankService = new BankService(bankRepo)
 const userService = new UserService(userRepo)
 const robberyService = new RobberyService(robberyRepo)
+const slotsService = new SlotsService()
 
 const services = {
   user: userService,
   bank: bankService,
-  robbery: robberyService
+  robbery: robberyService,
+  slots: slotsService
 }
 
 
@@ -51,6 +55,7 @@ bot.use(startComposer)
 bot.use(profileComposer)
 bot.use(statusComposer)
 bot.use(robberyComposer)
+bot.use(slotsComposer)
 
 bot.start({
   onStart: (botInfo) => {
