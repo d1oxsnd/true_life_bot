@@ -18,7 +18,9 @@ export class WorkService {
     private workRepo: WorkRepository,
     private bankService: BankService,
   ) {}
-
+async getStats(userId: string) {
+    return await this.workRepo.getOrCreateStats(userId)
+  }
   async processWork(userId: string, role: Role) {
     const playableRole = (role === Role.ADMIN || role === Role.MODERATOR
       ? Role.BUSINESS_PLUS

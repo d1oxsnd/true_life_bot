@@ -2,10 +2,70 @@ import { Composer } from 'grammy'
 import type { MyContext } from '../../types/context.js'
 import { authMiddleware } from '../../middlewares/auth.middleware.js'
 import { UI } from '../../ui/theme.js'
+import { JOBS_BY_ROLE } from '../../lib/works.js'
+import type { PlayableRole } from '../../lib/works.js'
+import { Role } from '../../generated/prisma/enums.js'
 
 export const workComposer = new Composer<MyContext>()
 
-workComposer.hears(/^(работа|поработать|смена|работать)$/i, authMiddleware, async ctx => {
+workComposer.hears(/^(смена|работа)$/i, authMiddleware, async ctx => {
+  if (!ctx.user || !ctx.from) return
+
+  try {
+    const playableRole = (ctx.user.role === Role.ADMIN || ctx.user.role === Role.MODERATOR
+      ? Role.BUSINESS_PLUS
+      : ctx.user.role) as PlayableRole
+
+    const roleConfig = JOBS_BY_ROLE[playableRole]
+    if (!roleConfig) {
+      return await ctx.smartReply(UI.error('Для вашего статуса нет доступных работ.'))
+    }
+
+const stats = await ctx.services.work.getStats(ctx.user.id)
+    const now = new Date()
+
+    let cooldownText = '🟢 _Готов к работе!_'
+    
+    if (stats.lastWorkAt) {
+      const elapsedMs = now.getTime() - stats.lastWorkAt.getTime()
+      if (elapsedMs < roleConfig.cooldownMs) {
+        const remainingMs = roleConfig.cooldownMs - elapsedMs
+        const totalSeconds = Math.ceil(remainingMs / 1000)
+        const minutes = Math.floor(totalSeconds / 60)
+        const seconds = totalSeconds % 60
+        const timeStr = minutes > 0 ? `${minutes}мин. ${seconds}сек.` : `${seconds}сек.`
+        cooldownText = `⏳ _Отдых еще ${timeStr}_`
+      }
+    }
+
+    const streak = stats.streak || 0
+    const streakBonus = streak > 1 ? (streak - 1) * 5 : 0
+    const streakText = streak > 0 ? `🔥 *${streak}x* (+${streakBonus}%)` : '_Нет серии_'
+
+    const jobsList = roleConfig.jobs
+      .map(j => `      ${j.icon} ${j.title}`)
+      .join('\n')
+
+    const message = [
+      UI.header(ctx.user.username ?? ctx.from.first_name, ctx.from.id, 'биржевая смена', '💼'),
+      '📊 Статус смены:',
+      `      ${cooldownText}`,
+      '🔥 Текущий стрик:',
+      `      ${streakText}`,
+      '🛠 Доступные вакансии:',
+      jobsList,
+      '',
+      UI.guide('💡', 'Чтобы выйти на смену', 'смена выйти'),
+    ].join('\n')
+
+    await ctx.smartReply(message, { parse_mode: 'Markdown' })
+  } catch (error) {
+    console.error('Ошибка в инфо смены:', error)
+    await ctx.smartReply(UI.error('Не удалось загрузить информацию о смене.'))
+  }
+})
+
+workComposer.hears(/^(?:смена\s+выйти|поработать|работать)$/i, authMiddleware, async ctx => {
   if (!ctx.user || !ctx.from) return
 
   try {
@@ -16,7 +76,6 @@ workComposer.hears(/^(работа|поработать|смена|работа�
         const totalSeconds = Math.ceil(result.remainingMs / 1000)
         const minutes = Math.floor(totalSeconds / 60)
         const seconds = totalSeconds % 60
-
         const timeStr = minutes > 0 ? `${minutes}мин. ${seconds}сек.` : `${seconds}сек.`
 
         return await ctx.smartReply(
@@ -37,7 +96,6 @@ workComposer.hears(/^(работа|поработать|смена|работа�
     const { outcome } = result
     const { job, earned, streak, streakBonusPercent, event } = outcome
 
-    // 2. Формируем плашки под события
     let statusTitle = 'Заработано'
     let eventNotice = ''
 
@@ -52,11 +110,9 @@ workComposer.hears(/^(работа|поработать|смена|работа�
       eventNotice = '\n      ⚠️ _Рынок пошел против вас!_'
     }
 
-    // 3. Формируем инфо по стрику
     const streakText = streak > 1 ? ` 🔥 Стрик: *${streak}x* (+${streakBonusPercent}%)` : ''
     const contentText = `${job.icon} *${job.title}*${streakText}${eventNotice}`
 
-    // 4. Отправляем карточку через UI
     return await ctx.smartReply(
       UI.actionCard({
         username: ctx.user.username ?? ctx.from.first_name,
