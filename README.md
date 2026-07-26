@@ -13,7 +13,7 @@
 ## 🇷🇺 Русская версия
 
 ### 📖 О проекте
-**True Life Bot** — это интерактивный текстовый RPG-бот для Telegram. Игроки могут развивать своего персонажа, управлять банковским балансом, прокачивать статусы (от Бомжа до Админа) и взаимодействовать с другими участниками группы.
+**True Life Bot** — это интерактивный текстовый RPG-бот для Telegram. Игроки могут развивать своего персонажа, зарабатывать деньги на работах, играть в казино, грабить других участников, прокачивать социальные и экономические статусы (от Бомжа до Бизнесмена) и управлять банковским балансом.
 
 ### 🚀 Технологический стек
 - **Язык & Среда:** Node.js (TypeScript, ES Modules)
@@ -25,28 +25,47 @@
 
 ---
 
+### 🎮 Команды бота
+
+| Команда | Описание | Пример |
+|---|---|---|
+| `профиль`, `п` | Просмотр профиля игрока или другого участника | `профиль`, `п @username` |
+| `смена`, `работа` | Просмотр информации о смене, стриках и доступных работах | `смена` |
+| `смена выйти`, `поработать` | Выход на рабочую смену и заработок денег | `поработать` |
+| `слоты [сумма]`, `казино` | Игра в слоты / казино (поддержка `все`, `1.5к`, `2.5м`) | `слоты 500`, `слоты все` |
+| `ограбить`, `грабеж` | Попытка ограбить игрока (ответ на его сообщение) | `ограбить` (в ответ) |
+| `статус`, `статусы` | Список доступных статусов и их стоимости | `статус` |
+| `статус поднять`, `повысить` | Покупка следующего игрового статуса | `статус поднять` |
+| `/start` | Регистрация нового игрока в боте | `/start` |
+
+---
+
 ### 📂 Архитектура проекта
 
 ```text
 prisma/
 ├── migrations/          # История миграций PostgreSQL
-└── schemas/             # Модульные схемы Prisma (schema, user, bank, role)
+└── schemas/             # Модульные схемы Prisma (schema, user, bank, role, robberyStats, workStats)
 src/
 ├── commands/            # Обработчики команд бота (GrammY composers)
-│   ├── profile/         # Просмотр профиля игрока ("профиль")
-│   └── start/           # Команда приветствия (/start)
+│   ├── profile/         # Просмотр профиля игрока
+│   ├── robbery/         # Система ограблений пользователей
+│   ├── slots/           # Казино / Игровой автомат (слоты)
+│   ├── start/           # Команда приветствия (/start)
+│   ├── status/          # Покупка и просмотр игровых статусов
+│   └── work/            # Рабочие смены, стрики и заработок
 ├── generated/           # Сгенерированный Prisma Client
-├── lib/                 # Инициализация Prisma client и иерархия ролей
-├── middlewares/         # Middleware (авторизация, проверка бана, RBAC ролей)
-├── repositories/        # Слой доступа к данным (CRUD-запросы Prisma)
-├── services/            # Слой бизнес-логики (User & Bank services)
+├── lib/                 # Клиент Prisma, иерархия ролей и конфигурация работ
+├── middlewares/         # Middleware (авторизация, проверка бана, роли)
+├── repositories/        # Слой доступа к данным (User, Bank, Robbery, Work repositories)
+├── services/            # Слой бизнес-логики (User, Bank, Robbery, Slots, Work services)
 ├── types/               # Кастомный контекст GrammY (services, smartReply)
-├── utils/               # Утилиты (генератор ID, форматирование баланса, экстрактор игроков)
-└── index.ts             # Точка входа и ручная инъекция зависимостей (DI)
+├── ui/                  # Оформление и шаблоны сообщений (theme.ts)
+├── utils/               # Утилиты (генератор ID, форматирование баланса, экстрактор пользователей)
+└── index.ts             # Точка входа и инъекция зависимостей (DI)
 ```
 
 ---
-
 
 ### 🛠️ Быстрый запуск
 
@@ -64,7 +83,7 @@ npm install
 DATABASE_URL="postgresql://postgres_user:postgres_password@localhost:6000/postgres_db?schema=public"
 
 # Токен бота Telegram от @BotFather
-BOT_TOKEN="your_telegram_bot_token"
+TELEGRAM_BOT_TOKEN="your_telegram_bot_token"
 
 # Telegram ID владельца / супер-админа
 ADMIN_TELEGRAM_ID="123456789"
@@ -95,7 +114,7 @@ npm run dev
 ## 🇬🇧 English Version
 
 ### 📖 About the Project
-**True Life Bot** is an interactive text-based Telegram RPG game bot. Players can develop their characters, manage bank balances, upgrade economic/social statuses (from Homeless to Admin), and interact with other players in chats.
+**True Life Bot** is an interactive text-based Telegram RPG game bot. Players can develop their characters, earn money working shifts, play slot machine games, rob other chat participants, upgrade economic/social statuses (from Homeless to Business), and manage their bank account balance.
 
 ### 🚀 Tech Stack
 - **Language & Runtime:** Node.js (TypeScript, ES Modules)
@@ -107,28 +126,47 @@ npm run dev
 
 ---
 
+### 🎮 Bot Commands
+
+| Command | Description | Example |
+|---|---|---|
+| `профиль`, `п` | View your own or another user's profile | `профиль`, `п @username` |
+| `смена`, `работа` | View current shift status, streak, and job info | `смена` |
+| `смена выйти`, `поработать` | Start a work shift to earn money | `поработать` |
+| `слоты [amount]`, `казино` | Play slots / casino game (supports `все`, `1.5к`, `2.5м`) | `слоты 500`, `слоты все` |
+| `ограбить`, `грабеж` | Attempt to rob a player (reply to their message) | `ограбить` (in reply) |
+| `статус`, `статусы` | View list of available status upgrades and prices | `статус` |
+| `статус поднять`, `повысить` | Upgrade to the next status rank | `статус поднять` |
+| `/start` | Register a new player account | `/start` |
+
+---
+
 ### 📂 Project Architecture
 
 ```text
 prisma/
 ├── migrations/          # PostgreSQL migration history
-└── schemas/             # Modular Prisma schemas (schema, user, bank, role)
+└── schemas/             # Modular Prisma schemas (schema, user, bank, role, robberyStats, workStats)
 src/
 ├── commands/            # Bot command handlers (GrammY composers)
-│   ├── profile/         # Profile handler ("профиль")
-│   └── start/           # Welcome handler (/start)
+│   ├── profile/         # User profile viewer
+│   ├── robbery/         # Player robbery mechanism
+│   ├── slots/           # Slot machine game logic & composer
+│   ├── start/           # Welcome & user registration (/start)
+│   ├── status/          # Status upgrades & status overview
+│   └── work/            # Work shifts, streaks, and earnings
 ├── generated/           # Generated Prisma Client code
-├── lib/                 # Prisma client instance & role weight definitions
+├── lib/                 # Prisma instance, role hierarchy, and job definitions
 ├── middlewares/         # Middlewares (Authentication, ban checks, RBAC guards)
-├── repositories/        # Data Access Layer (Prisma CRUD operations)
-├── services/            # Domain Business Logic (User & Bank services)
+├── repositories/        # Data Access Layer (User, Bank, Robbery, Work repositories)
+├── services/            # Domain Business Logic (User, Bank, Robbery, Slots, Work services)
 ├── types/               # Custom GrammY context extensions (services, smartReply)
+├── ui/                  # UI Theme and message presentation layer (theme.ts)
 ├── utils/               # Utility functions (ID generation, money formatting, player extraction)
-└── index.ts             # Application entrypoint & manual Dependency Injection (DI)
+└── index.ts             # Application entrypoint & Dependency Injection (DI)
 ```
 
 ---
-
 
 ### 🛠️ Quick Start
 
@@ -146,7 +184,7 @@ Create a `.env` file in the root directory:
 DATABASE_URL="postgresql://postgres_user:postgres_password@localhost:6000/postgres_db?schema=public"
 
 # Telegram Bot Token obtained from @BotFather
-BOT_TOKEN="your_telegram_bot_token"
+TELEGRAM_BOT_TOKEN="your_telegram_bot_token"
 
 # Telegram ID of the super administrator
 ADMIN_TELEGRAM_ID="123456789"
