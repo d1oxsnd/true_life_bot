@@ -1,0 +1,14 @@
+model WorkStats {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  streak      Int      @default(0)         // Текущая серия работ (0..10)
+  lastWorkAt  DateTime?                    // Время последней успешной работы
+  totalEarned BigInt   @default(0)         // Всего заработано денег на работах
+  totalWorks  Int      @default(0)         // Всего выполненных смен
+  critCount   Int      @default(0)         // Сколько раз выпадал x3 крит
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
