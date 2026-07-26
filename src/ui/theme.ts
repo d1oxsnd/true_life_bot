@@ -1,6 +1,10 @@
 import { formatMoney } from '../utils/money.formatter.js'
 
 export const UI = {
+	header: (username: string, userId: number | string, action: string, icon = '⚙️') => {
+		return `${icon} [${username}](tg://user?id=${userId}),\n${action}:`
+	},
+
 	actionCard: (params: {
 		username: string
 		userId: number | string
@@ -17,7 +21,7 @@ export const UI = {
 		lines.push(`${icon} [${username}](tg://user?id=${userId}),\n${action}:`)
 
 		if (content) {
-			lines.push(`      ${content}`)
+			lines.push(`${content}`)
 		}
 
 		if (statusTitle) {
@@ -26,17 +30,25 @@ export const UI = {
 
 		if (money) {
 			const sign = money.sign ?? ''
-			lines.push(`      💵 _${sign}${formatMoney(money.amount)}_`)
+			lines.push(`💵 _${sign}${formatMoney(money.amount)}_`)
 		}
 
 		return lines.join('\n')
 	},
 
 	error: (title: string, details?: string) => {
-    return `❌ ${title}` + (details ? `\n      ${details}` : '')
-  },
+		return `❌ ${title}` + (details ? `\n${details}` : '')
+	},
 
-  guide: (icon: string, title: string, command: string) => {
-    return `${icon} ${title}:\n      ⚙️ \`${command}\``
+	guide: (icon: string, title: string, command: string, description?: string) => {
+		const descText = description ? ` (${description})` : ''
+		return `${icon} ${title}:\n\`${command}\` ${descText}`
+	},
+
+	insufficientFunds: (balance: bigint) => {
+    return UI.error(
+      'У вас недостаточно средств!',
+      `Ваш баланс: 💵 _${formatMoney(balance)}_`
+    )
   },
 }

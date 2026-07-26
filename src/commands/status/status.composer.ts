@@ -9,6 +9,7 @@ import {
 import { authMiddleware } from '../../middlewares/auth.middleware.js'
 import type { MyContext } from '../../types/context.js'
 import { formatMoney } from '../../utils/money.formatter.js'
+import { UI } from '../../ui/theme.js'
 
 export const statusComposer = new Composer<MyContext>()
 
@@ -28,7 +29,6 @@ statusComposer.hears(/^статус$/i, authMiddleware, async ctx => {
     const isUnlocked = infoWeight <= currentWeight
 
     const priceText = info.price > 0n ? formatMoney(info.price) : 'Бесплатно'
-
     const labelText = isCurrent ? `*${info.label} 👈 — сейчас*` : info.label
 
     const formattedDescription = info.description
@@ -37,41 +37,37 @@ statusComposer.hears(/^статус$/i, authMiddleware, async ctx => {
         const trimmed = item.trim()
         return isUnlocked ? `\`${trimmed}\`` : `_${trimmed}_`
       })
-      .join('\n              ')
+      .join('\n            ')
 
     text += `${labelText}\n`
-    text += `      💵 **Цена:** _${priceText}_\n`
-    text += `      ⚙️ **Команды:** \n              ${formattedDescription}\n`
+    text += `      💵 Цена: _${priceText}_\n`
+    text += `      ⚙️ Команды: \n            ${formattedDescription}\n\n`
   })
 
-  text += `\n💡 Чтобы повысить статус\n` + `      ⚙️ \`статус поднять\``
+  text += UI.guide('💡', 'Чтобы повысить статус', 'статус поднять')
 
   await ctx.smartReply(text, { parse_mode: 'Markdown' })
 })
 
 statusComposer.hears(/^статус\s+(поднять|повысить|ап|купить)$/i, authMiddleware, async ctx => {
-  if (!ctx.user) return
+  if (!ctx.user || !ctx.from) return
 
   const currentRole = ctx.user.role as Role
 
   if (!canUpgrade(currentRole)) {
-    await ctx.smartReply(
-      `✋ Максимальный статус!\n` + 
-      `      Ждите новые обновления :D`
+    return await ctx.smartReply(
+      UI.error('Максимальный статус!', 'Ждите новые обновления :D')
     )
-    return
   }
 
   const nextRole = getNextRole(currentRole)
   if (!nextRole) {
-    await ctx.smartReply('⚠️ Следующий статус не найден.')
-    return
+    return await ctx.smartReply(UI.error('Следующий статус не найден.'))
   }
 
   const nextConfig = GAME_ROLES_CONFIG[nextRole]
   if (!nextConfig) {
-    await ctx.smartReply('⚠️ Конфигурация для следующего статуса не найдена.')
-    return
+    return await ctx.smartReply(UI.error('Конфигурация для следующего статуса не найдена.'))
   }
 
   const upgradePrice = nextConfig.price
@@ -88,27 +84,31 @@ statusComposer.hears(/^статус\s+(поднять|повысить|ап|ку
         const currentBalance = ctx.user.bankAccount?.balance || 0n
         const missing = upgradePrice > currentBalance ? upgradePrice - currentBalance : 0n
 
-        await ctx.smartReply(
-          `🤏🏻 Недостаточно средств!\n` +
-            `      Для статуса _${nextConfig.label}_\n` +
-            `            не хватает 💵 _${formatMoney(missing)}_`,
+        return await ctx.smartReply(
+          UI.error(
+            'Недостаточно средств!',
+            `Для статуса _${nextConfig.label}_ не хватает 💵 _${formatMoney(missing)}_`
+          ),
           { parse_mode: 'Markdown' },
         )
-        return
       }
 
-      await ctx.smartReply('⚠️ Не удалось выполнить транзакцию. Попробуйте позже.')
-      return
+      return await ctx.smartReply(UI.error('Не удалось выполнить транзакцию. Попробуйте позже.'))
     }
 
-    await ctx.smartReply(
-      `🎉 Успешно повышено\n` +
-        `      до статуса _${nextConfig.label}_\n` +
-        `            и списано 💵 _${formatMoney(upgradePrice)}_`,
+    return await ctx.smartReply(
+      UI.actionCard({
+        username: ctx.user.username,
+        userId: ctx.from.id,
+        action: `повысил статус до _${nextConfig.label}_`,
+        icon: '🎉',
+        statusTitle: 'Списано за покупку',
+        money: { amount: upgradePrice, sign: '-' },
+      }),
       { parse_mode: 'Markdown' },
     )
   } catch (error) {
     console.error('Ошибка при повышении статуса:', error)
-    await ctx.smartReply('⚠️ Произошла ошибка при покупке статуса. Попробуйте позже.')
+    await ctx.smartReply(UI.error('Произошла ошибка при покупке статуса. Попробуйте позже.'))
   }
 })
