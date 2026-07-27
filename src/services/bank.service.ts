@@ -18,6 +18,11 @@ export class BankService {
 		return { success: true } as const
 	}
 
+	async forceDecrementBalance(userId: string, amount: bigint) {
+		await this.bankRepo.forceDecrementBalance(userId, amount)
+		return { success: true } as const
+	}
+
 	async getMoney(userId: string, amount: bigint) {
 		await this.bankRepo.incrementBalance(userId, amount)
 		return { success: true } as const

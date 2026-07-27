@@ -17,17 +17,21 @@ export function formatMoney(amount: number | bigint): string {
 
   if (numAmount === 0) return '$0'
 
+  const isNegative = numAmount < 0
+  const absAmount = Math.abs(numAmount)
+  const sign = isNegative ? '-' : ''
+
   for (const tier of MONEY_TIERS) {
-    if (numAmount >= tier.value) {
-      const formatted = (numAmount / tier.value)
+    if (absAmount >= tier.value) {
+      const formatted = (absAmount / tier.value)
         .toFixed(2)
         .replace(/\.00$/, '')
         .replace(/(\.\d[1-9])0$/, '$1')
-      return `$${formatted}${tier.symbol}`
+      return `${sign}$${formatted}${tier.symbol}`
     }
   }
 
-  return `$${numAmount}`
+  return `${sign}$${absAmount}`
 }
 
 export function parseMoney(input: string): number | null {

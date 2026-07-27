@@ -25,12 +25,9 @@ export class BankRepository {
   }
 
   async forceDecrementBalance(userId: string, amount: bigint): Promise<void> {
-    const account = await prisma.bankAccount.findUnique({ where: { userId } });
-    const currentBalance = account?.balance ?? 0n;
-    const newBalance = currentBalance > amount ? currentBalance - amount : 0n;
     await prisma.bankAccount.update({
       where: { userId },
-      data: { balance: newBalance },
+      data: { balance: { decrement: amount } },
     });
   }
 

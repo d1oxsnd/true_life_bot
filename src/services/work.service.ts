@@ -87,7 +87,7 @@ async getStats(userId: string) {
     if (finalEarned > 0n) {
       await this.bankService.getMoney(userId, finalEarned)
     } else if (finalEarned < 0n) {
-      await this.bankService.payMoney(userId, -finalEarned)
+      await this.bankService.forceDecrementBalance(userId, -finalEarned)
     }
 
     await this.workRepo.recordWork({
