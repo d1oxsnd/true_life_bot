@@ -18,13 +18,18 @@ adminComposer.hears(
   authMiddleware,
   requireRole(Role.ADMIN, '/givemoney'),
   async ctx => {
+    if (!ctx.user || !ctx.from) return
+
     const rawMatch = typeof ctx.match === 'string' ? ctx.match : ctx.match[1]
     const extracted = await extractTargetPlayer(ctx, rawMatch)
 
     if ('error' in extracted) {
       return await ctx.smartReply(
-        UI.error('Command usage error', extracted.error + '\n\n👉 Example: `/givemoney txN-YDx 100k`'),
-        { parse_mode: 'Markdown' }
+        UI.error(
+          'Ошибка вызова команды!',
+          `${extracted.error}\n👉 Пример: \`/givemoney txN-YDx 100k\``,
+        ),
+        { parse_mode: 'Markdown' },
       )
     }
 
@@ -32,32 +37,41 @@ adminComposer.hears(
 
     if (!remainingText) {
       return await ctx.smartReply(
-        UI.error('Amount is missing!', '👉 Example: `/givemoney txN-YDx 100k` or `/givemoney 5000` (in reply)'),
-        { parse_mode: 'Markdown' }
+        UI.error(
+          'Укажите сумму!',
+          '👉 Примеры:\n' +
+            '            `/givemoney txN-YDx 100k`\n' +
+            '            `/givemoney 5000` (в ответ на сообщение)',
+        ),
+        { parse_mode: 'Markdown' },
       )
     }
 
     const parsedNumber = parseMoney(remainingText)
     if (parsedNumber === null) {
-      return await ctx.smartReply(UI.error('Invalid amount format!'))
+      return await ctx.smartReply(UI.error('Укажите корректную сумму!'))
     }
 
     const giveAmount = BigInt(parsedNumber)
     if (giveAmount <= 0n) {
-      return await ctx.smartReply(UI.error('Amount must be greater than 0!'))
+      return await ctx.smartReply(UI.error('Сумма должна быть больше 0!'))
     }
 
     const updatedUser = await ctx.services.admin.giveMoney(targetUser.id, giveAmount)
-
     const recipientMention = `[${updatedUser.username}](tg://user?id=${updatedUser.telegramId})`
 
     return await ctx.smartReply(
-      `✅ *Granted money*\n\n` +
-        `👤 User: ${recipientMention} (\`${updatedUser.id}\`)\n` +
-        `💵 Added: _+${formatMoney(giveAmount)}_`,
-      { parse_mode: 'Markdown' }
+      UI.actionCard({
+        username: ctx.user.username ?? ctx.from.first_name,
+        userId: ctx.from.id,
+        action: `начислил деньги игроку ${recipientMention} (\`${updatedUser.id}\`)`,
+        icon: '💳',
+        statusTitle: 'Начислено',
+        money: { amount: giveAmount, sign: '+' },
+      }),
+      { parse_mode: 'Markdown' },
     )
-  }
+  },
 )
 
 // ------------------------------------------------------------------
@@ -68,13 +82,18 @@ adminComposer.hears(
   authMiddleware,
   requireRole(Role.ADMIN, '/takemoney'),
   async ctx => {
+    if (!ctx.user || !ctx.from) return
+
     const rawMatch = typeof ctx.match === 'string' ? ctx.match : ctx.match[1]
     const extracted = await extractTargetPlayer(ctx, rawMatch)
 
     if ('error' in extracted) {
       return await ctx.smartReply(
-        UI.error('Command usage error', extracted.error + '\n\n👉 Example: `/takemoney txN-YDx 50k`'),
-        { parse_mode: 'Markdown' }
+        UI.error(
+          'Ошибка вызова команды!',
+          `${extracted.error}\n👉 Пример: \`/takemoney txN-YDx 50k\``,
+        ),
+        { parse_mode: 'Markdown' },
       )
     }
 
@@ -82,8 +101,13 @@ adminComposer.hears(
 
     if (!remainingText) {
       return await ctx.smartReply(
-        UI.error('Amount is missing!', '👉 Example: `/takemoney txN-YDx 50k` or `/takemoney all`'),
-        { parse_mode: 'Markdown' }
+        UI.error(
+          'Укажите сумму для списания!',
+          '👉 Примеры:\n' +
+            '            `/takemoney txN-YDx 50k`\n' +
+            '            `/takemoney all` (в ответ на сообщение)',
+        ),
+        { parse_mode: 'Markdown' },
       )
     }
 
@@ -92,32 +116,42 @@ adminComposer.hears(
     if (/^(all|все|всё)$/i.test(remainingText.trim())) {
       await ctx.services.admin.takeMoney(targetUser.id, 'all')
       return await ctx.smartReply(
-        `✅ *Cleared balance*\n\n` +
-          `👤 User: ${recipientMention} (\`${targetUser.id}\`)\n` +
-          `💵 Balance reset to: _0_`,
-        { parse_mode: 'Markdown' }
+        UI.actionCard({
+          username: ctx.user.username ?? ctx.from.first_name,
+          userId: ctx.from.id,
+          action: `полностью обнулил баланс игроку ${recipientMention} (\`${targetUser.id}\`)`,
+          icon: '🧹',
+          statusTitle: 'Баланс сброшен',
+          content: '      💵 _0_',
+        }),
+        { parse_mode: 'Markdown' },
       )
     }
 
     const parsedNumber = parseMoney(remainingText)
     if (parsedNumber === null) {
-      return await ctx.smartReply(UI.error('Invalid amount format!'))
+      return await ctx.smartReply(UI.error('Укажите корректную сумму!'))
     }
 
     const takeAmount = BigInt(parsedNumber)
     if (takeAmount <= 0n) {
-      return await ctx.smartReply(UI.error('Amount must be greater than 0!'))
+      return await ctx.smartReply(UI.error('Сумма должна быть больше 0!'))
     }
 
     await ctx.services.admin.takeMoney(targetUser.id, takeAmount)
 
     return await ctx.smartReply(
-      `✅ *Deducted money*\n\n` +
-        `👤 User: ${recipientMention} (\`${targetUser.id}\`)\n` +
-        `💵 Subtracted: _-${formatMoney(takeAmount)}_`,
-      { parse_mode: 'Markdown' }
+      UI.actionCard({
+        username: ctx.user.username ?? ctx.from.first_name,
+        userId: ctx.from.id,
+        action: `списал деньги у игрока ${recipientMention} (\`${targetUser.id}\`)`,
+        icon: '📉',
+        statusTitle: 'Списано',
+        money: { amount: takeAmount, sign: '-' },
+      }),
+      { parse_mode: 'Markdown' },
     )
-  }
+  },
 )
 
 // ------------------------------------------------------------------
@@ -128,13 +162,18 @@ adminComposer.hears(
   authMiddleware,
   requireRole(Role.ADMIN, '/setrole'),
   async ctx => {
+    if (!ctx.user || !ctx.from) return
+
     const rawMatch = typeof ctx.match === 'string' ? ctx.match : ctx.match[1]
     const extracted = await extractTargetPlayer(ctx, rawMatch)
 
     if ('error' in extracted) {
       return await ctx.smartReply(
-        UI.error('Command usage error', extracted.error + '\n\n👉 Example: `/setrole txN-YDx BUSINESS_PLUS`'),
-        { parse_mode: 'Markdown' }
+        UI.error(
+          'Ошибка вызова команды!',
+          `${extracted.error}\n👉 Пример: \`/setrole txN-YDx BUSINESS_PLUS\``,
+        ),
+        { parse_mode: 'Markdown' },
       )
     }
 
@@ -143,10 +182,10 @@ adminComposer.hears(
     if (!remainingText) {
       return await ctx.smartReply(
         UI.error(
-          'Role is missing!',
-          '👉 Available roles: `BOMZH`, `PLANKTON`, `BUSINESS_PLUS`, `MODERATOR`, `ADMIN`'
+          'Укажите роль!',
+          '👉 Доступные роли: `BOMZH`, `PLANKTON`, `BUSINESS_PLUS`, `MODERATOR`, `ADMIN`',
         ),
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'Markdown' },
       )
     }
 
@@ -156,10 +195,10 @@ adminComposer.hears(
     if (!validRoles.includes(roleInput as Role)) {
       return await ctx.smartReply(
         UI.error(
-          'Invalid role specified!',
-          `Available roles: \`${validRoles.join('`, `')}\``
+          'Указана некорректная роль!',
+          `Допустимые роли: \`${validRoles.join('`, `')}\``,
         ),
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'Markdown' },
       )
     }
 
@@ -170,12 +209,17 @@ adminComposer.hears(
     const roleLabel = RoleLabels[newRole] ?? newRole
 
     return await ctx.smartReply(
-      `👑 *Role Updated*\n\n` +
-        `👤 User: ${recipientMention} (\`${updatedUser.id}\`)\n` +
-        `🎭 New Role: *${roleLabel}* (\`${newRole}\`)`,
-      { parse_mode: 'Markdown' }
+      UI.actionCard({
+        username: ctx.user.username ?? ctx.from.first_name,
+        userId: ctx.from.id,
+        action: `изменил статус игроку ${recipientMention} (\`${updatedUser.id}\`)`,
+        icon: '👑',
+        statusTitle: 'Новый статус',
+        content: `      *${roleLabel}* (\`${newRole}\`)`,
+      }),
+      { parse_mode: 'Markdown' },
     )
-  }
+  },
 )
 
 // ------------------------------------------------------------------
@@ -186,33 +230,42 @@ adminComposer.hears(
   authMiddleware,
   requireRole(Role.MODERATOR, '/ban'),
   async ctx => {
+    if (!ctx.user || !ctx.from) return
+
     const rawMatch = typeof ctx.match === 'string' ? ctx.match : ctx.match[1]
     const extracted = await extractTargetPlayer(ctx, rawMatch)
 
     if ('error' in extracted) {
       return await ctx.smartReply(
-        UI.error('Command usage error', extracted.error + '\n\n👉 Example: `/ban txN-YDx` or `/ban` (in reply)'),
-        { parse_mode: 'Markdown' }
+        UI.error(
+          'Ошибка вызова команды!',
+          `${extracted.error}\n👉 Пример: \`/ban txN-YDx\` или \`/ban\` (в ответ)`,
+        ),
+        { parse_mode: 'Markdown' },
       )
     }
 
     const { player: targetUser } = extracted.target
 
     if (hasPermission(targetUser.role, Role.ADMIN)) {
-      return await ctx.smartReply(UI.error('Cannot ban an Administrator!'))
+      return await ctx.smartReply(UI.error('Нельзя заблокировать Администратора!'))
     }
 
     const updatedUser = await ctx.services.admin.banUser(targetUser.id)
-
     const recipientMention = `[${updatedUser.username}](tg://user?id=${updatedUser.telegramId})`
 
     return await ctx.smartReply(
-      `🚫 *User Banned*\n\n` +
-        `👤 User: ${recipientMention} (\`${updatedUser.id}\`)\n` +
-        `⚠️ User has been blocked from using bot features.`,
-      { parse_mode: 'Markdown' }
+      UI.actionCard({
+        username: ctx.user.username ?? ctx.from.first_name,
+        userId: ctx.from.id,
+        action: `заблокировал доступ игроку ${recipientMention} (\`${updatedUser.id}\`)`,
+        icon: '🚫',
+        statusTitle: 'Статус блокировки',
+        content: '      ⛔️ *Заблокирован*',
+      }),
+      { parse_mode: 'Markdown' },
     )
-  }
+  },
 )
 
 // ------------------------------------------------------------------
@@ -223,29 +276,38 @@ adminComposer.hears(
   authMiddleware,
   requireRole(Role.MODERATOR, '/unban'),
   async ctx => {
+    if (!ctx.user || !ctx.from) return
+
     const rawMatch = typeof ctx.match === 'string' ? ctx.match : ctx.match[1]
     const extracted = await extractTargetPlayer(ctx, rawMatch)
 
     if ('error' in extracted) {
       return await ctx.smartReply(
-        UI.error('Command usage error', extracted.error + '\n\n👉 Example: `/unban txN-YDx` or `/unban` (in reply)'),
-        { parse_mode: 'Markdown' }
+        UI.error(
+          'Ошибка вызова команды!',
+          `${extracted.error}\n👉 Пример: \`/unban txN-YDx\` или \`/unban\` (в ответ)`,
+        ),
+        { parse_mode: 'Markdown' },
       )
     }
 
     const { player: targetUser } = extracted.target
-
     const updatedUser = await ctx.services.admin.unbanUser(targetUser.id)
 
     const recipientMention = `[${updatedUser.username}](tg://user?id=${updatedUser.telegramId})`
 
     return await ctx.smartReply(
-      `✅ *User Unbanned*\n\n` +
-        `👤 User: ${recipientMention} (\`${updatedUser.id}\`)\n` +
-        `🔓 Access to bot features has been restored.`,
-      { parse_mode: 'Markdown' }
+      UI.actionCard({
+        username: ctx.user.username ?? ctx.from.first_name,
+        userId: ctx.from.id,
+        action: `разблокировал доступ игроку ${recipientMention} (\`${updatedUser.id}\`)`,
+        icon: '✅',
+        statusTitle: 'Статус блокировки',
+        content: '      🟢 *Активен*',
+      }),
+      { parse_mode: 'Markdown' },
     )
-  }
+  },
 )
 
 // ------------------------------------------------------------------
@@ -256,13 +318,18 @@ adminComposer.hears(
   authMiddleware,
   requireRole(Role.MODERATOR, '/userinfo'),
   async ctx => {
+    if (!ctx.user || !ctx.from) return
+
     const rawMatch = typeof ctx.match === 'string' ? ctx.match : ctx.match[1]
     const extracted = await extractTargetPlayer(ctx, rawMatch)
 
     if ('error' in extracted) {
       return await ctx.smartReply(
-        UI.error('Command usage error', extracted.error + '\n\n👉 Example: `/userinfo txN-YDx`'),
-        { parse_mode: 'Markdown' }
+        UI.error(
+          'Ошибка вызова команды!',
+          `${extracted.error}\n👉 Пример: \`/userinfo txN-YDx\``,
+        ),
+        { parse_mode: 'Markdown' },
       )
     }
 
@@ -270,26 +337,27 @@ adminComposer.hears(
     const info = await ctx.services.admin.getUserInfo(targetUser.id)
 
     if (!info) {
-      return await ctx.smartReply(UI.error('User info not found!'))
+      return await ctx.smartReply(UI.error('Информация о пользователе не найдена!'))
     }
 
     const balance = info.bankAccount?.balance ?? 0n
     const roleLabel = RoleLabels[info.role as Role] ?? info.role
-    const banStatus = info.isBanned ? '⛔️ *BANNED*' : '🟢 Active'
+    const banStatus = info.isBanned ? '⛔️ *Заблокирован*' : '🟢 Активен'
     const regDate = info.createdAt.toISOString().split('T')[0]
 
-    return await ctx.smartReply(
-      `🔍 *Admin User Info*\n\n` +
-        `• *Internal ID:* \`${info.id}\`\n` +
-        `• *Telegram ID:* \`${info.telegramId}\`\n` +
-        `• *Username:* \`${info.username}\`\n` +
-        `• *Role:* ${roleLabel} (\`${info.role}\`)\n` +
-        `• *Status:* ${banStatus}\n` +
-        `• *Balance:* 💵 _${formatMoney(balance)}_\n` +
-        `• *Registered:* \`${regDate}\``,
-      { parse_mode: 'Markdown' }
-    )
-  }
+    const message = [
+      UI.header(ctx.user.username ?? ctx.from.first_name, ctx.from.id, 'системная информация о пользователе', '🔍'),
+      `      👤 Пользователь: [${info.username}](tg://user?id=${info.telegramId})`,
+      `      🆔 Внутренний ID: \`${info.id}\``,
+      `      📱 Telegram ID: \`${info.telegramId}\``,
+      `      👑 Роль: *${roleLabel}* (\`${info.role}\`)`,
+      `      🛡 Статус: ${banStatus}`,
+      `      💵 Баланс: _${formatMoney(balance)}_`,
+      `      📅 Регистрация: \`${regDate}\``,
+    ].join('\n')
+
+    return await ctx.smartReply(message, { parse_mode: 'Markdown' })
+  },
 )
 
 // ------------------------------------------------------------------
@@ -300,19 +368,24 @@ adminComposer.hears(
   authMiddleware,
   requireRole(Role.MODERATOR, '/adminhelp'),
   async ctx => {
-    const text =
-      `⚡️ *Admin Commands Panel*\n\n` +
-      `👑 *ADMIN Commands:*\n` +
-      `• \`/givemoney <ID> <amount>\` — Grant money to player\n` +
-      `• \`/takemoney <ID> <amount/all>\` — Deduct money from player\n` +
-      `• \`/setrole <ID> <role>\` — Change player role (\`BOMZH\`, \`PLANKTON\`, \`BUSINESS_PLUS\`, \`MODERATOR\`, \`ADMIN\`)\n\n` +
-      `🛡 *MODERATOR Commands:*\n` +
-      `• \`/ban <ID>\` — Ban user from using the bot\n` +
-      `• \`/unban <ID>\` — Unban user\n` +
-      `• \`/userinfo <ID>\` — View full diagnostic user details\n` +
-      `• \`/adminhelp\` — Show this help message\n\n` +
-      `💡 _Note: You can pass \`<ID>\` as internal User ID (e.g. \`txN-YDx\`) or send the command in reply to a user's message._`
+    if (!ctx.user || !ctx.from) return
 
-    await ctx.smartReply(text, { parse_mode: 'Markdown' })
-  }
+    const message = [
+      UI.header(ctx.user.username ?? ctx.from.first_name, ctx.from.id, 'панель администрирования', '⚡️'),
+      '👑 *Команды АДМИНИСТРАТОРА:*',
+      '      `/givemoney <ID> <сумма>` — Начислить деньги игроку',
+      '      `/takemoney <ID> <сумма/all>` — Списать деньги или обнулить',
+      '      `/setrole <ID> <роль>` — Установить роль (`BOMZH`, `PLANKTON`, `BUSINESS_PLUS`, `MODERATOR`, `ADMIN`)',
+      '',
+      '🛡 *Команды МОДЕРАТОРА:*',
+      '      `/ban <ID>` — Заблокировать доступ пользователю',
+      '      `/unban <ID>` — Разблокировать доступ пользователю',
+      '      `/userinfo <ID>` — Просмотр детальных данных пользователя',
+      '      `/adminhelp` — Вызов этой справки',
+      '',
+      UI.guide('💡', 'Указание цели', '/givemoney txN-YDx 100k', 'или в ответ на сообщение'),
+    ].join('\n')
+
+    await ctx.smartReply(message, { parse_mode: 'Markdown' })
+  },
 )
