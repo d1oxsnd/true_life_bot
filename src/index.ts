@@ -17,6 +17,7 @@ import { slotsComposer } from './commands/slots/slots.composer.js'
 import { WorkRepository } from './repositories/work.repository.js'
 import { WorkService } from './services/work.service.js'
 import { workComposer } from './commands/work/work.composer.js'
+import { transferComposer } from './commands/transfer/transfer.composer.js'
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 if (!TELEGRAM_BOT_TOKEN) throw new Error('Ошибочка: В .env не задан TELEGRAM_BOT_TOKEN!')
@@ -63,6 +64,7 @@ bot.use(statusComposer)
 bot.use(robberyComposer)
 bot.use(slotsComposer)
 bot.use(workComposer)
+bot.use(transferComposer)
 
 bot.start({
   onStart: (botInfo) => {

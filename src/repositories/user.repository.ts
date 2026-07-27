@@ -43,8 +43,11 @@ export class UserRepository {
     })
   }
 
-  async findByUsername(username: string): Promise<User | null> {
-    return prisma.user.findUnique({ where: { username } })
+  async findByUsername(username: string): Promise<UserWithBank | null> {
+    return prisma.user.findUnique({
+      where: { username },
+      include: { bankAccount: true },
+    })
   }
 
   async update(

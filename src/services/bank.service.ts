@@ -7,14 +7,7 @@ export class BankService {
 	) {}
 
 	async transferMoney(fromUserId: string, toUserId: string, amount: bigint) {
-		const success = await this.bankRepo.decrementBalance(fromUserId, amount)
-		if (!success) {
-			return { success: false, reason: 'INSUFFICIENT_FUNDS' } as const
-		}
-
-		await this.bankRepo.incrementBalance(toUserId, amount)
-
-		return { success: true } as const
+		return await this.bankRepo.transferMoney(fromUserId, toUserId, amount)
 	}
 
 	async payMoney(userId: string, amount: bigint) {

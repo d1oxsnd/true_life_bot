@@ -17,6 +17,42 @@ export class BankRepository {
     });
   }
 
+  async transferMoney(
+    fromUserId: string,
+    toUserId: string,
+    amount: bigint
+  ): Promise<{ success: boolean; error?: string }> {
+    if (fromUserId === toUserId) {
+      return { success: false, error: 'SELF_TRANSFER' };
+    }
+
+    try {
+      await prisma.$transaction(async (tx) => {
+        const balanceUpdate = await tx.bankAccount.updateMany({
+          where: { userId: fromUserId, balance: { gte: amount } },
+          data: { balance: { decrement: amount } },
+        });
+
+        if (balanceUpdate.count === 0) {
+          throw new Error('NOT_ENOUGH_MONEY');
+        }
+
+        await tx.bankAccount.update({
+          where: { userId: toUserId },
+          data: { balance: { increment: amount } },
+        });
+      });
+
+      return { success: true };
+    } catch (error: any) {
+      if (error.message === 'NOT_ENOUGH_MONEY') {
+        return { success: false, error: 'NOT_ENOUGH_MONEY' };
+      }
+      console.error('Transfer transaction failed:', error);
+      return { success: false, error: 'TRANSACTION_ERROR' };
+    }
+  }
+
 async payForRoleUpgrade(
   userId: string,
   amount: bigint,
