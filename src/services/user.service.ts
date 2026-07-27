@@ -23,19 +23,37 @@ export class UserService {
 
   async updateUser(
     telegramId: bigint,
-    data: { username?: string; role?: Role }
+    data: { username?: string; role?: Role; isBanned?: boolean }
   ): Promise<UserWithBank> {
     return this.userRepo.update(telegramId, data)
   }
 
-  async banUser(telegramId: bigint): Promise<UserWithBank> {
-  return this.userRepo.update(telegramId, { isBanned: true })
-}
+  async updateUserById(
+    id: string,
+    data: { username?: string; role?: Role; isBanned?: boolean }
+  ): Promise<UserWithBank> {
+    return this.userRepo.updateById(id, data)
+  }
 
-// 💡 Разбанить пользователя
-async unbanUser(telegramId: bigint): Promise<UserWithBank> {
-  return this.userRepo.update(telegramId, { isBanned: false })
-}
+  async setRoleById(id: string, role: Role): Promise<UserWithBank> {
+    return this.userRepo.updateById(id, { role })
+  }
+
+  async banUser(telegramId: bigint): Promise<UserWithBank> {
+    return this.userRepo.update(telegramId, { isBanned: true })
+  }
+
+  async banUserById(id: string): Promise<UserWithBank> {
+    return this.userRepo.updateById(id, { isBanned: true })
+  }
+
+  async unbanUser(telegramId: bigint): Promise<UserWithBank> {
+    return this.userRepo.update(telegramId, { isBanned: false })
+  }
+
+  async unbanUserById(id: string): Promise<UserWithBank> {
+    return this.userRepo.updateById(id, { isBanned: false })
+  }
 
   async deleteUser(telegramId: bigint): Promise<UserWithBank> {
     return this.userRepo.delete(telegramId)

@@ -23,6 +23,20 @@ export class BankService {
 		return { success: true } as const
 	}
 
+	async giveMoneyAdmin(userId: string, amount: bigint) {
+		await this.bankRepo.incrementBalance(userId, amount)
+		return { success: true } as const
+	}
+
+	async takeMoneyAdmin(userId: string, amount: bigint | 'all') {
+		if (amount === 'all') {
+			await this.bankRepo.setBalance(userId, 0n)
+		} else {
+			await this.bankRepo.forceDecrementBalance(userId, amount)
+		}
+		return { success: true } as const
+	}
+
 async payForRoleUpgrade(userId: string, amount: bigint, newRole: Role) {
   return await this.bankRepo.payForRoleUpgrade(userId, amount, newRole)
 }

@@ -41,6 +41,22 @@
 
 ---
 
+### 🛡️ Административные команды (для Admin / Moderator)
+
+| Команда | Мин. Роль | Описание | Пример |
+|---|---|---|---|
+| `/givemoney <ID> <amount>` | `ADMIN` | Начислить денег игроку | `/givemoney txN-YDx 100k` |
+| `/takemoney <ID> <amount/all>` | `ADMIN` | Списать деньги у игрока | `/takemoney txN-YDx 50k` |
+| `/setrole <ID> <role>` | `ADMIN` | Установить роль игроку (`BOMZH`, `PLANKTON`, `BUSINESS_PLUS`, `MODERATOR`, `ADMIN`) | `/setrole txN-YDx BUSINESS_PLUS` |
+| `/ban <ID>` | `MODERATOR` | Заблокировать пользователя | `/ban txN-YDx` |
+| `/unban <ID>` | `MODERATOR` | Разблокировать пользователя | `/unban txN-YDx` |
+| `/userinfo <ID>` | `MODERATOR` | Просмотр детальной системной информации | `/userinfo txN-YDx` |
+| `/adminhelp` | `MODERATOR` | Панель справки по админ-командам | `/adminhelp` |
+
+> `<ID>` указывается как внутренний ID пользователя (например, `txN-YDx`) или команда отправляется в ответ (`Reply`) на сообщение пользователя.
+
+---
+
 ### 📂 Архитектура проекта
 
 ```text

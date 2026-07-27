@@ -7,6 +7,11 @@ export type TargetPlayerResult = {
   isSelf: boolean
 }
 
+export type ExtractedTargetResult = {
+  player: UserWithBank
+  remainingText: string
+}
+
 export async function getTargetPlayer(
   ctx: MyContext
 ): Promise<TargetPlayerResult | null> {
@@ -30,5 +35,54 @@ export async function getTargetPlayer(
     player: ctx.user,
     targetTgUser: ctx.from,
     isSelf: true,
+  }
+}
+
+export async function extractTargetPlayer(
+  ctx: MyContext,
+  rawInput?: string
+): Promise<{ target: ExtractedTargetResult } | { error: string }> {
+  const replyUser = ctx.message?.reply_to_message?.from
+
+  // 1. Извлечение по ответу на сообщение (Reply)
+  if (replyUser) {
+    if (replyUser.is_bot) {
+      return { error: 'Команды нельзя выполнять на ботах!' }
+    }
+    const player = await ctx.services.user.getOrCreateUser(BigInt(replyUser.id))
+    return {
+      target: {
+        player,
+        remainingText: rawInput ? rawInput.trim() : '',
+      },
+    }
+  }
+
+  // 2. Извлечение по внутреннему ID пользователя в БД (User.id, например txN-YDx)
+  if (!rawInput || !rawInput.trim()) {
+    return {
+      error: 'Укажите ID пользователя (`txN-YDx`) или отправьте команду в ответ на сообщение.',
+    }
+  }
+
+  const tokens = rawInput.trim().split(/\s+/)
+  const targetId = tokens[0]
+
+  if (!targetId) {
+    return { error: 'ID пользователя не указан!' }
+  }
+
+  const remainingText = tokens.slice(1).join(' ')
+  const player = await ctx.services.user.getUserById(targetId)
+
+  if (!player) {
+    return { error: `Пользователь с ID \`${targetId}\` не найден!` }
+  }
+
+  return {
+    target: {
+      player,
+      remainingText,
+    },
   }
 }

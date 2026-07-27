@@ -61,6 +61,17 @@ export class UserRepository {
     })
   }
 
+  async updateById(
+    id: string,
+    data: { username?: string; role?: Role; isBanned?: boolean }
+  ): Promise<UserWithBank> {
+    return prisma.user.update({
+      where: { id },
+      data,
+      include: { bankAccount: true },
+    })
+  }
+
   async delete(telegramId: bigint): Promise<UserWithBank> {
     return prisma.user.delete({
       where: { telegramId },
