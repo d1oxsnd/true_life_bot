@@ -10,22 +10,22 @@ export const UI = {
 		userId: number | string
 		action: string
 		icon?: string
-		content?: string
 		statusTitle?: string
+		content?: string
 		money?: { amount: bigint; sign?: '+' | '-' | '' }
 	}) => {
-		const { username, userId, action, icon = '⚙️', content, statusTitle, money } = params
+		const { username, userId, action, icon = '⚙️', statusTitle, content,  money } = params
 
 		const lines: string[] = []
 
 		lines.push(`${icon} [${username}](tg://user?id=${userId}),\n${action}:`)
 
-		if (content) {
-			lines.push(`${content}`)
-		}
-
 		if (statusTitle) {
 			lines.push(`${statusTitle}:`)
+		}
+
+		if (content) {
+			lines.push(`${content}`)
 		}
 
 		if (money) {
