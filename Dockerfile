@@ -15,6 +15,7 @@ COPY prisma ./prisma
 RUN npm ci
 
 # Генерация клиента Prisma
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
 
 # Копирование исходных файлов
