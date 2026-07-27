@@ -21,11 +21,11 @@ workComposer.hears(/^(смена|работа)$/i, authMiddleware, async ctx => 
       return await ctx.smartReply(UI.error('Для вашего статуса нет доступных работ.'))
     }
 
-const stats = await ctx.services.work.getStats(ctx.user.id)
+    const stats = await ctx.services.work.getStats(ctx.user.id)
     const now = new Date()
 
     let cooldownText = '🟢 _Готов к работе!_'
-    
+
     if (stats.lastWorkAt) {
       const elapsedMs = now.getTime() - stats.lastWorkAt.getTime()
       if (elapsedMs < roleConfig.cooldownMs) {
@@ -101,13 +101,37 @@ workComposer.hears(/^(?:смена\s+выйти|поработать|работ�
 
     if (event === 'CRIT') {
       statusTitle = 'ДЖЕКПОТ НА РАБОТЕ 🔥 (x3)'
-      eventNotice = '\n      🎉 _Вы нашли редкую купюру на улице!_'
+      if (job.id.startsWith('ozon')) {
+        eventNotice = '\n      🎉 _Фрод 10,000 пиков на ТСД сработал идеально!_'
+      } else if (job.id.startsWith('freelance')) {
+        eventNotice = '\n      🚀 _Жирный стартап из Кремниевой долины выплатил огромный оверпей!_'
+      } else if (job.id.startsWith('infobiz')) {
+        eventNotice = '\n      🔮 _Марафон Желаний зашел всей стране! Мешки наличных не вмещаются в Майбах!_'
+      } else {
+        eventNotice = '\n      🎉 _Супер выигрыш за смену!_'
+      }
     } else if (event === 'BONUS') {
-      statusTitle = 'Премия от босса 🍩 (+50%)'
-      eventNotice = '\n      👍 _Начальник похвалил вас за усердие!_'
+      statusTitle = 'Премия от руководства 🍩 (+50%)'
+      if (job.id.startsWith('ozon')) {
+        eventNotice = '\n      👍 _Старший смены выписал премию за перевыполнение нормы!_'
+      } else if (job.id.startsWith('freelance')) {
+        eventNotice = '\n      👍 _Заказчик принял работу с первого раза и отсыпал щедрых чаевых!_'
+      } else if (job.id.startsWith('infobiz')) {
+        eventNotice = '\n      👍 _Солдаты Изобилия раскупили весь ВИП-тариф за 5 минут!_'
+      } else {
+        eventNotice = '\n      👍 _Вы получили премию за усердие!_'
+      }
     } else if (event === 'LOSS') {
-      statusTitle = 'Убытки по сделке 📉'
-      eventNotice = '\n      ⚠️ _Рынок пошел против вас!_'
+      statusTitle = 'Штраф / Убытки 📉'
+      if (job.id.startsWith('ozon')) {
+        eventNotice = '\n      ⚠️ _Начальник смены доебался и ебанул штрафы за косой взгляд!_'
+      } else if (job.id.startsWith('freelance')) {
+        eventNotice = '\n      ⚠️ _Заказчик поиграл со шрифтами и сбежал без оплаты!_'
+      } else if (job.id.startsWith('infobiz')) {
+        eventNotice = '\n      ⚠️ _Пришла налоговая с проверкой дробления бизнеса и заблокировала счета!_'
+      } else {
+        eventNotice = '\n      ⚠️ _Смена завершилась в минус!_'
+      }
     }
 
     const streakText = streak > 1 ? ` 🔥 Стрик: *${streak}x* (+${streakBonusPercent}%)` : ''
